@@ -220,6 +220,7 @@ class ChromeCastButton extends Button {
 
         loadRequest.autoplay = true;
         loadRequest.currentTime = this.player_.currentTime();
+        loadRequest.media.currentTime = this.player_.currentTime();
 
         this.apiSession.loadMedia(loadRequest, ::this.onMediaDiscovered, ::this.castError);
         this.apiSession.addUpdateListener(::this.onSessionUpdate);
