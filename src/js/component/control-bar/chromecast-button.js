@@ -154,7 +154,7 @@ class ChromeCastButton extends Button {
                 value = ref[key];
                 mediaInfo.metadata[key] = value;
             }
-
+            mediaInfo.metadata['command'] = 'set_metadata';
         }
         //Add poster image on player
         const poster = this.player().poster();
