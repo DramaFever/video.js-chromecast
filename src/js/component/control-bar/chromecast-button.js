@@ -258,13 +258,7 @@ class ChromeCastButton extends Button {
         this.casting = false;
         let time = this.player_.currentTime();
         this.removeClass('connected');
-        this.player_.src(this.player_.options_['sources']);
-        if (!this.player_.paused()) {
-            this.player_.one('seeked', function () {
-                return this.player_.play();
-            });
-        }
-        this.player_.currentTime(time);
+        
         this.player_.options_.inactivityTimeout = this.inactivityTimeout;
         return this.apiSession = null;
     }
