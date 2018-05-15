@@ -21,8 +21,8 @@ class ChromeCastButton extends Button {
     constructor (player, options) {
         super(player, options);
         this.hide();
-        this.initializeApi();
         options.appId = player.options_.chromecast.appId;
+        this.initializeApi(options.appId);
         player.chromecast = this;
 
         this.on(player, 'loadstart', () => {
@@ -44,9 +44,8 @@ class ChromeCastButton extends Button {
      * @method initializeApi
      */
 
-    initializeApi () {
+    initializeApi (appId) {
         let apiConfig;
-        let appId;
         let sessionRequest;
 
         if (!videojs.browser.IS_CHROME || videojs.browser.IS_EDGE || typeof chrome === 'undefined') {
@@ -63,7 +62,6 @@ class ChromeCastButton extends Button {
         }
 
         videojs.log('Cast APIs are available');
-        appId = this.options_.appId || chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID;
         sessionRequest = new chrome.cast.SessionRequest(appId);
         apiConfig = new chrome.cast.ApiConfig(sessionRequest, ::this.sessionJoinedListener, ::this.receiverListener);
         return chrome.cast.initialize(apiConfig, ::this.onInitSuccess, ::this.castError);
