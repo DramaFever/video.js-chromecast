@@ -73,6 +73,7 @@ class ChromeCastButton extends Button {
             code: castError.code,
             message: castError.description
         };
+        this.player_.trigger('casterror');
 
         switch (castError.code) {
             case chrome.cast.ErrorCode.API_NOT_INITIALIZED:
@@ -235,6 +236,7 @@ class ChromeCastButton extends Button {
 
         this.casting = true;
         this.inactivityTimeout = this.player_.options_.inactivityTimeout;
+        this.player_.trigger('castbegin');
         this.player_.options_.inactivityTimeout = 0;
         this.player_.userActive(true);
         this.addClass('connected');
@@ -258,7 +260,7 @@ class ChromeCastButton extends Button {
         this.casting = false;
         let time = this.player_.currentTime();
         this.removeClass('connected');
-        
+        this.player_.trigger('castend');
         this.player_.options_.inactivityTimeout = this.inactivityTimeout;
         return this.apiSession = null;
     }
