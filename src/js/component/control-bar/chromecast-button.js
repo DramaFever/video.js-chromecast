@@ -244,7 +244,7 @@ class ChromeCastButton extends Button {
     }
 
     onSessionUpdate (isAlive) {
-        if (!this.player_.apiMedia) {
+        if (this.userStop) {
             return;
         }
         if (!isAlive) {
@@ -253,6 +253,7 @@ class ChromeCastButton extends Button {
     }
 
     stopCasting () {
+        this.userStop = true;
         return this.apiSession.stop(::this.onStopAppSuccess, ::this.castError);
     }
 
@@ -281,6 +282,7 @@ class ChromeCastButton extends Button {
      */
     handleClick () {
         super.handleClick();
+        this.userStop = false;
         if (this.casting) {
             return this.stopCasting();
         } else {
