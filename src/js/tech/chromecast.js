@@ -323,6 +323,14 @@ class Chromecast extends Tech {
         super.dispose(this);
     }
 
+    setAutoplay() {
+
+    }
+
+    seeking() {
+
+    }
+
 }
 
 Chromecast.prototype.paused_ = false;
