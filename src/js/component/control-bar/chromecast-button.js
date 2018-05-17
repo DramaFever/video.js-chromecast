@@ -222,8 +222,13 @@ class ChromeCastButton extends Button {
         loadRequest.autoplay = true;
         loadRequest.currentTime = this.player_.currentTime();
         loadRequest.media.currentTime = this.player_.currentTime();
-        
-        this.apiSession.loadMedia(loadRequest, ::this.onMediaDiscovered, ::this.castError);
+        this.loadRequest = loadRequest;
+
+        this.apiSession.sendMessage(this.options_.playerOptions.chromecast.messageProtocol, mediaInfo.metadata, ::this.onLoadMedia);
+    }
+
+    onLoadMedia() {
+        this.apiSession.loadMedia(this.loadRequest, ::this.onMediaDiscovered, ::this.castError);
         this.apiSession.addUpdateListener(::this.onSessionUpdate);
     }
 
