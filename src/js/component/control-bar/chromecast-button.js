@@ -149,8 +149,8 @@ class ChromeCastButton extends Button {
 
         mediaInfo = new chrome.cast.media.MediaInfo(source, type);
         mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
-        if (this.options_.playerOptions.chromecast.metadata) {
-            ref = this.options_.playerOptions.chromecast.metadata;
+        if (this.player_.options_.chromecast.metadata) {
+            ref = this.player_.options_.chromecast.metadata;
             for (key in ref) {
                 value = ref[key];
                 mediaInfo.metadata[key] = value;
@@ -222,7 +222,7 @@ class ChromeCastButton extends Button {
         loadRequest.autoplay = true;
         loadRequest.currentTime = this.player_.currentTime();
         loadRequest.media.currentTime = this.player_.currentTime();
-
+        
         this.apiSession.loadMedia(loadRequest, ::this.onMediaDiscovered, ::this.castError);
         this.apiSession.addUpdateListener(::this.onSessionUpdate);
     }
