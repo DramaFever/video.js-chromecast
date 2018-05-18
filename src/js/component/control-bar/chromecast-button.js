@@ -22,6 +22,7 @@ class ChromeCastButton extends Button {
         super(player, options);
         this.hide();
         this.userStop = false;
+        this.isAuthorized = true;
         options.appId = player.options_.chromecast.appId;
         this.initializeApi(options.appId);
         player.chromecast = this;
@@ -36,6 +37,11 @@ class ChromeCastButton extends Button {
           if (this.casting && this.apiSession) {
             this.apiSession.stop(null, null);
           }
+        });
+
+        this.on(player, 'castnotauthorized', () => {
+            this.hide();
+            this.isAuthorized = false;
         });
     }
 
@@ -98,7 +104,7 @@ class ChromeCastButton extends Button {
     }
 
     onInitSuccess () {
-        if (hasReceiver) {
+        if (hasReceiver && this.isAuthorized) {
             this.show();
         } else {
             this.hide();
