@@ -45,6 +45,8 @@ var ChromeCastButton = (function (_Button) {
 
         _get(Object.getPrototypeOf(ChromeCastButton.prototype), 'constructor', this).call(this, player, options);
         this.hide();
+        this.userStop = false;
+        this.isAuthorized = true;
         options.appId = player.options_.chromecast.appId;
         this.initializeApi(options.appId);
         player.chromecast = this;
@@ -59,6 +61,11 @@ var ChromeCastButton = (function (_Button) {
             if (_this.casting && _this.apiSession) {
                 _this.apiSession.stop(null, null);
             }
+        });
+
+        this.on(player, 'castnotauthorized', function () {
+            _this.hide();
+            _this.isAuthorized = false;
         });
     }
 
@@ -125,7 +132,7 @@ var ChromeCastButton = (function (_Button) {
     }, {
         key: 'onInitSuccess',
         value: function onInitSuccess() {
-            if (hasReceiver) {
+            if (hasReceiver && this.isAuthorized) {
                 this.show();
             } else {
                 this.hide();
