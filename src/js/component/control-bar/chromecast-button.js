@@ -21,6 +21,7 @@ class ChromeCastButton extends Button {
     constructor (player, options) {
         super(player, options);
         this.hide();
+        this.userStop = false;
         options.appId = player.options_.chromecast.appId;
         this.initializeApi(options.appId);
         player.chromecast = this;
