@@ -30,10 +30,12 @@ class Chromecast extends Tech {
         this.apiSession.addUpdateListener(sessionUpdateHanlder);
 
         this.on('dispose', () => {
-          this.apiMedia.removeUpdateListener(mediaStatusUpdateHandler);
-          this.apiSession.removeUpdateListener(sessionUpdateHanlder);
-          this.onMediaStatusUpdate()
-          this.onSessionUpdate(false);
+            if (this.apiMedia) 
+                this.apiMedia.removeUpdateListener(mediaStatusUpdateHandler);
+            if (this.apiSession)
+                this.apiSession.removeUpdateListener(sessionUpdateHanlder);
+            this.onMediaStatusUpdate()
+            this.onSessionUpdate(false);
         });
 
         let tracks = this.textTracks();
@@ -319,6 +321,14 @@ class Chromecast extends Tech {
     dispose () {
         this.resetSrc_(Function.prototype);
         super.dispose(this);
+    }
+
+    setAutoplay() {
+
+    }
+
+    seeking() {
+
     }
 
 }

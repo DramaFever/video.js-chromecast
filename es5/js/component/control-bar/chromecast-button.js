@@ -45,8 +45,10 @@ var ChromeCastButton = (function (_Button) {
 
         _get(Object.getPrototypeOf(ChromeCastButton.prototype), 'constructor', this).call(this, player, options);
         this.hide();
-        this.initializeApi();
+        this.userStop = false;
+        this.isAuthorized = true;
         options.appId = player.options_.chromecast.appId;
+        this.initializeApi(options.appId);
         player.chromecast = this;
 
         this.on(player, 'loadstart', function () {
@@ -60,6 +62,11 @@ var ChromeCastButton = (function (_Button) {
                 _this.apiSession.stop(null, null);
             }
         });
+
+        this.on(player, 'castnotauthorized', function () {
+            _this.hide();
+            _this.isAuthorized = false;
+        });
     }
 
     /**
@@ -70,9 +77,8 @@ var ChromeCastButton = (function (_Button) {
 
     _createClass(ChromeCastButton, [{
         key: 'initializeApi',
-        value: function initializeApi() {
+        value: function initializeApi(appId) {
             var apiConfig = undefined;
-            var appId = undefined;
             var sessionRequest = undefined;
 
             if (!_videoJs2['default'].browser.IS_CHROME || _videoJs2['default'].browser.IS_EDGE || typeof chrome === 'undefined') {
@@ -89,7 +95,6 @@ var ChromeCastButton = (function (_Button) {
             }
 
             _videoJs2['default'].log('Cast APIs are available');
-            appId = this.options_.appId || chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID;
             sessionRequest = new chrome.cast.SessionRequest(appId);
             apiConfig = new chrome.cast.ApiConfig(sessionRequest, this.sessionJoinedListener.bind(this), this.receiverListener.bind(this));
             return chrome.cast.initialize(apiConfig, this.onInitSuccess.bind(this), this.castError.bind(this));
@@ -102,6 +107,7 @@ var ChromeCastButton = (function (_Button) {
                 code: _castError.code,
                 message: _castError.description
             };
+            this.player_.trigger('casterror');
 
             switch (_castError.code) {
                 case chrome.cast.ErrorCode.API_NOT_INITIALIZED:
@@ -126,7 +132,7 @@ var ChromeCastButton = (function (_Button) {
     }, {
         key: 'onInitSuccess',
         value: function onInitSuccess() {
-            if (hasReceiver) {
+            if (hasReceiver && this.isAuthorized) {
                 this.show();
             } else {
                 this.hide();
@@ -181,12 +187,13 @@ var ChromeCastButton = (function (_Button) {
 
             mediaInfo = new chrome.cast.media.MediaInfo(source, type);
             mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
-            if (this.options_.playerOptions.chromecast.metadata) {
-                ref = this.options_.playerOptions.chromecast.metadata;
+            if (this.player_.options_.chromecast.metadata) {
+                ref = this.player_.options_.chromecast.metadata;
                 for (key in ref) {
                     value = ref[key];
                     mediaInfo.metadata[key] = value;
                 }
+                mediaInfo.metadata['command'] = 'set_metadata';
             }
             //Add poster image on player
             var poster = this.player().poster();
@@ -252,8 +259,15 @@ var ChromeCastButton = (function (_Button) {
 
             loadRequest.autoplay = true;
             loadRequest.currentTime = this.player_.currentTime();
+            loadRequest.media.currentTime = this.player_.currentTime();
+            this.loadRequest = loadRequest;
 
-            this.apiSession.loadMedia(loadRequest, this.onMediaDiscovered.bind(this), this.castError.bind(this));
+            this.apiSession.sendMessage(this.options_.playerOptions.chromecast.messageProtocol, mediaInfo.metadata, this.onLoadMedia.bind(this));
+        }
+    }, {
+        key: 'onLoadMedia',
+        value: function onLoadMedia() {
+            this.apiSession.loadMedia(this.loadRequest, this.onMediaDiscovered.bind(this), this.castError.bind(this));
             this.apiSession.addUpdateListener(this.onSessionUpdate.bind(this));
         }
     }, {
@@ -267,6 +281,7 @@ var ChromeCastButton = (function (_Button) {
 
             this.casting = true;
             this.inactivityTimeout = this.player_.options_.inactivityTimeout;
+            this.player_.trigger('castbegin');
             this.player_.options_.inactivityTimeout = 0;
             this.player_.userActive(true);
             this.addClass('connected');
@@ -275,7 +290,7 @@ var ChromeCastButton = (function (_Button) {
     }, {
         key: 'onSessionUpdate',
         value: function onSessionUpdate(isAlive) {
-            if (!this.player_.apiMedia) {
+            if (this.userStop) {
                 return;
             }
             if (!isAlive) {
@@ -285,6 +300,7 @@ var ChromeCastButton = (function (_Button) {
     }, {
         key: 'stopCasting',
         value: function stopCasting() {
+            this.userStop = true;
             return this.apiSession.stop(this.onStopAppSuccess.bind(this), this.castError.bind(this));
         }
     }, {
@@ -293,13 +309,7 @@ var ChromeCastButton = (function (_Button) {
             this.casting = false;
             var time = this.player_.currentTime();
             this.removeClass('connected');
-            this.player_.src(this.player_.options_['sources']);
-            if (!this.player_.paused()) {
-                this.player_.one('seeked', function () {
-                    return this.player_.play();
-                });
-            }
-            this.player_.currentTime(time);
+            this.player_.trigger('castend');
             this.player_.options_.inactivityTimeout = this.inactivityTimeout;
             return this.apiSession = null;
         }
@@ -324,6 +334,7 @@ var ChromeCastButton = (function (_Button) {
         key: 'handleClick',
         value: function handleClick() {
             _get(Object.getPrototypeOf(ChromeCastButton.prototype), 'handleClick', this).call(this);
+            this.userStop = false;
             if (this.casting) {
                 return this.stopCasting();
             } else {
